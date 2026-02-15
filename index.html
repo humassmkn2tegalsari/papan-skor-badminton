@@ -79,6 +79,49 @@
             animation: shining 4s infinite;
         }
 
+        /* Hover Edit Overlay */
+        .edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 20;
+            text-align: center;
+        }
+
+        .logo-box:hover .edit-overlay,
+        .team-logo-box:hover .edit-overlay,
+        .name-container:hover .edit-overlay,
+        .title-container:hover .edit-overlay {
+            opacity: 1;
+        }
+
+        /* Interactive Containers */
+        .name-container, .title-container {
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+        
+        .name-container { padding: 4px 12px; }
+        .title-container { padding: 2px 8px; }
+
+        .name-container:hover, .title-container:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
         /* Score Change Animation */
         @keyframes scoreUpdate {
             0% { transform: scale(1); }
@@ -136,6 +179,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            position: relative;
         }
 
         .team-logo-box {
@@ -148,6 +192,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .hidden-input { display: none; }
@@ -171,14 +216,22 @@
         <!-- Header -->
         <header class="flex justify-between items-center px-6 py-3 glass-card rounded-2xl">
             <div class="flex items-center gap-4">
-                <!-- Logo Utama tetap memiliki class shining-box -->
                 <label class="logo-box shining-box">
                     <img id="mainLogo" src="" alt="L" class="max-h-full" onerror="this.src='https://via.placeholder.com/60?text=LOGO'">
+                    <div class="edit-overlay">Edit</div>
                     <input type="file" class="hidden-input" onchange="updateLogo(this, 'main')">
                 </label>
-                <div>
-                    <h1 id="matchTitle" class="text-lg md:text-xl font-black uppercase tracking-tight cursor-pointer" onclick="editField('matchTitle')">Turnamen Persahabatan</h1>
-                    <p id="subTitle" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest cursor-pointer" onclick="editField('subTitle')">Badminton Club SMK Negeri 2 Tegalsari</p>
+                <div class="flex flex-col gap-1">
+                    <!-- Judul Utama dengan overlay edit -->
+                    <div class="title-container" onclick="editField('matchTitle')">
+                        <div class="edit-overlay text-[8px]">Klik untuk Edit</div>
+                        <h1 id="matchTitle" class="text-lg md:text-xl font-black uppercase tracking-tight relative z-10">Turnamen Persahabatan</h1>
+                    </div>
+                    <!-- Sub Judul dengan overlay edit -->
+                    <div class="title-container" onclick="editField('subTitle')">
+                        <div class="edit-overlay text-[8px]">Klik untuk Edit</div>
+                        <p id="subTitle" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest relative z-10">Badminton Club SMK Negeri 2 Tegalsari</p>
+                    </div>
                 </div>
             </div>
             
@@ -205,12 +258,15 @@
                     </div>
 
                     <div class="flex flex-col items-center gap-4">
-                        <!-- Menghapus class shining-box dari logo tim -->
                         <label class="team-logo-box">
                             <img id="p1Logo" src="" class="max-h-full max-w-full object-contain p-2" onerror="this.src='https://via.placeholder.com/100?text=TIM+1'">
+                            <div class="edit-overlay">Edit</div>
                             <input type="file" class="hidden-input" onchange="updateLogo(this, 'p1')">
                         </label>
-                        <h2 id="p1Name" class="text-2xl md:text-4xl font-black text-white cursor-pointer uppercase tracking-tight" onclick="editField('p1Name')">PEMAIN 1</h2>
+                        <div class="name-container group" onclick="editField('p1Name')">
+                            <div class="edit-overlay">Klik untuk Edit</div>
+                            <h2 id="p1Name" class="text-2xl md:text-4xl font-black text-white uppercase tracking-tight relative z-10">PEMAIN 1</h2>
+                        </div>
                     </div>
 
                     <div id="score1" class="font-score font-bold score-text score-blue select-none cursor-pointer" onclick="changeScore(1,1)">0</div>
@@ -235,12 +291,15 @@
                     </div>
 
                     <div class="flex flex-col items-center gap-4">
-                        <!-- Menghapus class shining-box dari logo tim -->
                         <label class="team-logo-box">
                             <img id="p2Logo" src="" class="max-h-full max-w-full object-contain p-2" onerror="this.src='https://via.placeholder.com/100?text=TIM+2'">
+                            <div class="edit-overlay">Edit</div>
                             <input type="file" class="hidden-input" onchange="updateLogo(this, 'p2')">
                         </label>
-                        <h2 id="p2Name" class="text-2xl md:text-4xl font-black text-white cursor-pointer uppercase tracking-tight" onclick="editField('p2Name')">PEMAIN 2</h2>
+                        <div class="name-container group" onclick="editField('p2Name')">
+                            <div class="edit-overlay">Klik untuk Edit</div>
+                            <h2 id="p2Name" class="text-2xl md:text-4xl font-black text-white uppercase tracking-tight relative z-10">PEMAIN 2</h2>
+                        </div>
                     </div>
 
                     <div id="score2" class="font-score font-bold score-text score-red select-none cursor-pointer" onclick="changeScore(2,1)">0</div>
