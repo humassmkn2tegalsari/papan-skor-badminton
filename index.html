@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Skor Bulu Tangkis Pro - SMK Negeri 2 Tegalsari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            --bg-dark: #020617;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; 
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Animated Background Particles */
+        .bg-animation {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        }
+
+        .particle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.1;
+            filter: blur(2px);
+            animation: float-particle linear infinite;
+        }
+
+        @keyframes float-particle {
+            from { transform: translateY(100vh) scale(1); }
+            to { transform: translateY(-10vh) scale(1.5); }
+        }
+
+        /* Shining/Glint Effect Animation */
+        @keyframes shining {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .shining-box {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shining-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transform: skewX(-25deg);
+            animation: shining 4s infinite;
+        }
+
+        /* Score Change Animation */
+        @keyframes scoreUpdate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); filter: brightness(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-score {
+            animation: scoreUpdate 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .font-score {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .main-container {
+            width: 98vw;
+            height: 96vh;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .score-text {
+            font-size: min(25vh, 18vw);
+            line-height: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .score-blue { text-shadow: 0 0 50px rgba(59, 130, 246, 0.4); color: #60a5fa; }
+        .score-red { text-shadow: 0 0 50px rgba(239, 68, 68, 0.4); color: #f87171; }
+
+        .btn-control {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .btn-control:active { transform: scale(0.95); }
+
+        .logo-box {
+            width: min(8vh, 60px);
+            height: min(8vh, 60px);
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .team-logo-box {
+            width: min(10vh, 100px);
+            height: min(10vh, 100px);
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden-input { display: none; }
+
+        @keyframes trophy-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-trophy {
+            animation: trophy-bounce 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Latar Belakang Animasi -->
+    <div class="bg-animation" id="particleContainer"></div>
+
+    <div class="main-container">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center px-6 py-3 glass-card rounded-2xl">
+            <div class="flex items-center gap-4">
+                <!-- Logo Utama tetap memiliki class shining-box -->
+                <label class="logo-box shining-box">
+                    <img id="mainLogo" src="" alt="L" class="max-h-full" onerror="this.src='https://via.placeholder.com/60?text=LOGO'">
+                    <input type="file" class="hidden-input" onchange="updateLogo(this, 'main')">
+                </label>
+                <div>
+                    <h1 id="matchTitle" class="text-lg md:text-xl font-black uppercase tracking-tight cursor-pointer" onclick="editField('matchTitle')">Turnamen Persahabatan</h1>
+                    <p id="subTitle" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest cursor-pointer" onclick="editField('subTitle')">Badminton Club SMK Negeri 2 Tegalsari</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="flex flex-col items-end">
+                    <div id="clock" class="text-2xl md:text-3xl font-black font-mono text-white leading-none">00:00:00</div>
+                    <div id="fullDate" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Senin, 01 Januari 2024</div>
+                </div>
+                <button onclick="toggleFS()" class="p-2 text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <div class="flex-grow grid grid-cols-2 gap-6">
+            
+            <!-- Player 1 (Kiri) -->
+            <section class="glass-card rounded-[2.5rem] flex flex-col relative overflow-hidden border-t-4 border-blue-500/50">
+                <div class="p-8 flex flex-col items-center justify-between h-full">
+                    <div class="w-full flex justify-between items-center">
+                        <span class="bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Tuan Rumah</span>
+                        <div id="dots1" class="flex gap-2.5"></div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4">
+                        <!-- Menghapus class shining-box dari logo tim -->
+                        <label class="team-logo-box">
+                            <img id="p1Logo" src="" class="max-h-full max-w-full object-contain p-2" onerror="this.src='https://via.placeholder.com/100?text=TIM+1'">
+                            <input type="file" class="hidden-input" onchange="updateLogo(this, 'p1')">
+                        </label>
+                        <h2 id="p1Name" class="text-2xl md:text-4xl font-black text-white cursor-pointer uppercase tracking-tight" onclick="editField('p1Name')">PEMAIN 1</h2>
+                    </div>
+
+                    <div id="score1" class="font-score font-bold score-text score-blue select-none cursor-pointer" onclick="changeScore(1,1)">0</div>
+
+                    <div class="grid grid-cols-2 gap-4 w-full max-w-xs">
+                        <button onclick="changeScore(1, 1)" class="btn-control bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl text-2xl font-black shadow-lg shadow-blue-900/20">+</button>
+                        <button onclick="changeScore(1, -1)" class="btn-control bg-slate-800/50 hover:bg-slate-700 py-5 rounded-2xl text-2xl font-black border border-white/5">-</button>
+                    </div>
+                </div>
+                <div class="bg-blue-500/10 py-3 px-10 flex justify-between items-center border-t border-blue-500/10">
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Set Menang</span>
+                    <span id="set1" class="font-score font-bold text-2xl text-blue-400">0</span>
+                </div>
+            </section>
+
+            <!-- Player 2 (Kanan) -->
+            <section class="glass-card rounded-[2.5rem] flex flex-col relative overflow-hidden border-t-4 border-red-500/50">
+                <div class="p-8 flex flex-col items-center justify-between h-full">
+                    <div class="w-full flex justify-between items-center">
+                        <div id="dots2" class="flex gap-2.5"></div>
+                        <span class="bg-red-600/20 text-red-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Tamu</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4">
+                        <!-- Menghapus class shining-box dari logo tim -->
+                        <label class="team-logo-box">
+                            <img id="p2Logo" src="" class="max-h-full max-w-full object-contain p-2" onerror="this.src='https://via.placeholder.com/100?text=TIM+2'">
+                            <input type="file" class="hidden-input" onchange="updateLogo(this, 'p2')">
+                        </label>
+                        <h2 id="p2Name" class="text-2xl md:text-4xl font-black text-white cursor-pointer uppercase tracking-tight" onclick="editField('p2Name')">PEMAIN 2</h2>
+                    </div>
+
+                    <div id="score2" class="font-score font-bold score-text score-red select-none cursor-pointer" onclick="changeScore(2,1)">0</div>
+
+                    <div class="grid grid-cols-2 gap-4 w-full max-w-xs">
+                        <button onclick="changeScore(2, 1)" class="btn-control bg-red-600 hover:bg-red-500 py-5 rounded-2xl text-2xl font-black shadow-lg shadow-red-900/20">+</button>
+                        <button onclick="changeScore(2, -1)" class="btn-control bg-slate-800/50 hover:bg-slate-700 py-5 rounded-2xl text-2xl font-black border border-white/5">-</button>
+                    </div>
+                </div>
+                <div class="bg-red-500/10 py-3 px-10 flex justify-between items-center border-t border-red-500/10">
+                    <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Set Menang</span>
+                    <span id="set2" class="font-score font-bold text-2xl text-red-400">0</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer Control -->
+        <footer class="flex justify-center items-center gap-4 py-3">
+            <button onclick="resetMatch()" class="btn-control px-8 py-3 bg-slate-800 hover:bg-red-600/20 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/5">Reset Match</button>
+            <button onclick="swapSides()" class="btn-control px-8 py-3 bg-slate-800 hover:bg-blue-600/20 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/5">Tukar Posisi</button>
+            <div class="h-8 w-[1px] bg-white/10 mx-2"></div>
+            <div class="flex gap-2">
+                <button onclick="forceSet(1)" class="btn-control px-6 py-3 bg-blue-600/10 text-blue-400 rounded-xl text-[10px] font-black uppercase border border-blue-500/20 hover:bg-blue-600/20">+ Set P1</button>
+                <button onclick="forceSet(2)" class="btn-control px-6 py-3 bg-red-600/10 text-red-400 rounded-xl text-[10px] font-black uppercase border border-red-500/20 hover:bg-red-600/20">+ Set P2</button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-black mb-4 uppercase tracking-tight">Edit Informasi</h3>
+            <input type="text" id="modalInput" class="w-full bg-black/50 border border-white/10 p-4 rounded-xl text-white mb-6 focus:border-blue-500 outline-none font-bold">
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-xl font-black text-xs tracking-widest">BATAL</button>
+                <button onclick="saveModal()" class="flex-1 py-4 bg-blue-600 rounded-xl font-black text-xs tracking-widest shadow-lg shadow-blue-600/20">SIMPAN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl hidden flex-col items-center justify-center z-[60] p-4">
+        <div class="text-center animate-trophy mb-10">
+            <div class="inline-block p-8 bg-yellow-500/20 rounded-full border border-yellow-500/50 text-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            </div>
+        </div>
+        <h2 class="text-slate-400 font-bold tracking-[0.3em] uppercase text-xs mb-4">PEMENANG PERTANDINGAN</h2>
+        <div id="winnerNameDisplay" class="text-5xl md:text-8xl font-black text-white mb-12 tracking-tighter uppercase text-center drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">PEMAIN 1</div>
+        <button onclick="closeWinnerModal()" class="px-16 py-6 bg-white text-black font-black uppercase rounded-full tracking-widest hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+            SELESAI
+        </button>
+    </div>
+
+    <script>
+        // Latar Belakang
+        function createParticles() {
+            const container = document.getElementById('particleContainer');
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 4 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        let state = {
+            matchTitle: "Turnamen Persahabatan",
+            subTitle: "Badminton Club SMK Negeri 2 Tegalsari",
+            p1Name: "PEMAIN 1", p2Name: "PEMAIN 2",
+            s1: 0, s2: 0, set1: 0, set2: 0,
+            logos: { main: '', p1: '', p2: '' },
+            isMatchOver: false
+        };
+
+        let currentTarget = '';
+
+        function updateUI(animatedPlayer = null) {
+            document.getElementById('matchTitle').innerText = state.matchTitle;
+            document.getElementById('subTitle').innerText = state.subTitle;
+            document.getElementById('p1Name').innerText = state.p1Name;
+            document.getElementById('p2Name').innerText = state.p2Name;
+            
+            const s1El = document.getElementById('score1');
+            const s2El = document.getElementById('score2');
+            
+            if(animatedPlayer === 1) {
+                s1El.classList.remove('animate-score');
+                void s1El.offsetWidth; 
+                s1El.classList.add('animate-score');
+            } else if(animatedPlayer === 2) {
+                s2El.classList.remove('animate-score');
+                void s2El.offsetWidth;
+                s2El.classList.add('animate-score');
+            }
+
+            s1El.innerText = state.s1;
+            s2El.innerText = state.s2;
+            document.getElementById('set1').innerText = state.set1;
+            document.getElementById('set2').innerText = state.set2;
+            
+            if(state.logos.main) document.getElementById('mainLogo').src = state.logos.main;
+            if(state.logos.p1) document.getElementById('p1Logo').src = state.logos.p1;
+            if(state.logos.p2) document.getElementById('p2Logo').src = state.logos.p2;
+
+            renderDots();
+            checkMatchWinner();
+            localStorage.setItem('badminton_v6', JSON.stringify(state));
+        }
+
+        function renderDots() {
+            const d1 = document.getElementById('dots1');
+            const d2 = document.getElementById('dots2');
+            d1.innerHTML = ''; d2.innerHTML = '';
+            for(let i=0; i<3; i++){
+                d1.innerHTML += `<div class="w-3 h-3 rounded-full transition-all duration-500 ${i < state.set1 ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] scale-110' : 'bg-slate-700'}"></div>`;
+                d2.innerHTML += `<div class="w-3 h-3 rounded-full transition-all duration-500 ${i < state.set2 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-110' : 'bg-slate-700'}"></div>`;
+            }
+        }
+
+        function changeScore(p, amt) {
+            if(state.isMatchOver) return;
+            if(p===1) {
+                state.s1 = Math.max(0, Math.min(30, state.s1 + amt));
+            } else {
+                state.s2 = Math.max(0, Math.min(30, state.s2 + amt));
+            }
+            checkSet();
+            updateUI(p);
+        }
+
+        function checkSet() {
+            if((state.s1 >= 21 || state.s2 >= 21) && Math.abs(state.s1 - state.s2) >= 2 || state.s1 === 30 || state.s2 === 30) {
+                if(state.s1 > state.s2) state.set1++; else state.set2++;
+                state.s1 = 0; state.s2 = 0;
+            }
+        }
+
+        function forceSet(p) {
+            if(p===1) state.set1 = Math.min(2, state.set1 + 1);
+            else state.set2 = Math.min(2, state.set2 + 1);
+            updateUI();
+        }
+
+        function checkMatchWinner() {
+            if(state.isMatchOver) return;
+            if(state.set1 >= 2 || state.set2 >= 2) {
+                state.isMatchOver = true;
+                const winner = state.set1 >= 2 ? state.p1Name : state.p2Name;
+                setTimeout(() => showWinner(winner), 600);
+            }
+        }
+
+        function showWinner(name) {
+            document.getElementById('winnerNameDisplay').innerText = name;
+            document.getElementById('winnerModal').classList.replace('hidden', 'flex');
+            
+            const duration = 6 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 45, spread: 360, ticks: 100, zIndex: 100 };
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 60 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 300);
+        }
+
+        function closeWinnerModal() {
+            document.getElementById('winnerModal').classList.replace('flex', 'hidden');
+        }
+
+        function swapSides() {
+            [state.p1Name, state.p2Name] = [state.p2Name, state.p1Name];
+            [state.s1, state.s2] = [state.s2, state.s1];
+            [state.set1, state.set2] = [state.set2, state.set1];
+            [state.logos.p1, state.logos.p2] = [state.logos.p2, state.logos.p1];
+            updateUI();
+        }
+
+        function resetMatch() {
+            if(confirm('Mulai pertandingan baru?')) {
+                state.s1 = 0; state.s2 = 0; state.set1 = 0; state.set2 = 0;
+                state.isMatchOver = false;
+                updateUI();
+            }
+        }
+
+        function updateLogo(input, key) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    state.logos[key] = e.target.result;
+                    updateUI();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function editField(target) {
+            currentTarget = target;
+            document.getElementById('modalInput').value = state[target];
+            document.getElementById('modal').classList.replace('hidden', 'flex');
+        }
+
+        function saveModal() {
+            state[currentTarget] = document.getElementById('modalInput').value;
+            closeModal();
+            updateUI();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.replace('flex', 'hidden');
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('clock').innerText = `${hours}:${minutes}:${seconds}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('id-ID', options);
+            document.getElementById('fullDate').innerText = dateString;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const saved = localStorage.getItem('badminton_v6');
+        if(saved) {
+            const parsed = JSON.parse(saved);
+            state = {...state, ...parsed};
+        }
+        updateUI();
+    </script>
+</body>
+</html>
